@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lab2</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+        <style>
+            #alert{
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <header class="col-md-12">
+                    <h2>Event Registration Form</h2>
+                </header>
+            </div>
+            <div>
+                <section></section>
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label for="id">Invitation ID:</label>
+                        <div class="col-md-10">
+                            <input id="id" type="text" class="form-control" placeholder="Invitation ID">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="name">Your Name: </label>
+                        <div class="col-md-10">
+                            <input id="name" type="text" class="form-control" placeholder="Your name">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="cname">Company:</label>
+                        <div class="col-md-10">
+                            <input id="cname" type="text" class="form-control" placeholder="Company name">
+                        </div>
+                    </div>
+
+
+                    <label>Type:</label>
+
+                    <div class="radio">
+                        <label><input type="radio" name="optradio" value="Sole proprietorship" id="rbSoleProprietorship" checked>Sole proprietorship</label>
+                    </div>
+                    <div class="radio">
+                        <label><input type="radio" name="optradio" value="Partnership" id="rbPartnership">Partnership</label>
+                    </div>
+                    <div class="radio">
+                        <label><input type="radio" name="optradio" value="Corporation" id="rbCorporation">Corporation</label>
+                    </div>
+                    <div class="radio">
+                        <label><input type="radio" name="optradio" value="Other" id="rbOther">Other</label>
+                    </div>
+
+                    <!-- classes: alert-danger and alert-success -->
+                    <div id="alert" class="alert alert-warning" role="alert">
+                        <span id="alertClose" class="close" aria-hidden="true">&times;</span>
+                        <div id="msg1"> </div>
+                        <div id="msg2"> </div>
+                        <div id="msg3"> </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="btn-group mr-2" role="group" aria-label="First group">
+                    <button type="button" id="btnRegister" class="btn btn-primary">Register</button>
+                </div>               
+                <div class="btn-group mr-2" role="group" aria-label="First group">
+                    <button type="button" id="btnCheck" class="btn btn-secondary">Check Registeration</button>
+                </div>                  
+                <div class="btn-group mr-2" role="group" aria-label="First group">
+                    <button type="button" id="btnDelete" class="btn btn-warning">Delete Registeration</button>
+                </div>
+            </div>
+        </div>
+
+
+        <script>
+            $(document).ready(initApp);
+
+            function initApp() {
+                var $msg1 = $("#msg1");
+                var $msg2 = $("#msg2");
+                var $msg3 = $("#msg3");
+
+                var $id = $("#id");
+                var $name = $("#name");
+                var $cname = $("#cname");
+
+                var $btnRegister = $("#btnRegister");
+                var $btnCheck = $("#btnCheck");
+                var $btnDelete = $("#btnDelete");
+
+                var openRequest = window.indexedDB.open("registrationDB", 1);
+                var db;
+                var store;
+
+                var dbSupported = ("indexedDB" in window) ? true : false;
+
+                if (dbSupported) {
+
+                    openRequest.onsuccess = function (event) {
+                        if (openRequest.readyState == "done") {
+                            console.log("DB success");
+                        }
+                        db = openRequest.result;
+                    };
+
+                    openRequest.onupgradeneeded = function (event) {
+                        console.log("DB upgrading");
+
+                        db = openRequest.result;
+
+                        store = db.createObjectStore("registration", {keyPath: "invitationID"});
+
+                    };
+
+                    openRequest.onerror = function (event) {
+                        console.log("DB error");
+                        console.dir(event);
+                    };
+
+                }
+
+
+                function showPopupId(message1) {
+                    $msg1.html(message1).parent().show(1000);
+                    setTimeout(function () {
+                        $msg1.parent().hide(1000);
+                    }, 2500);
+                }
+                function showPopupName(message2) {
+                    $msg2.html(message2).show(1000);
+                    setTimeout(function () {
+                        $msg2.hide(1000);
+                    }, 2500);
+                }
+                function showPopupCompany(message3) {
+                    $msg3.html(message3).show(1000);
+                    setTimeout(function () {
+                        $msg3.hide(1000);
+                    }, 2500);
+                }
+
+                $("#alertClose").click(function () {
+                    $(this).parent().hide();
+                });
+
+
+                $btnRegister.click(function () {
+                    var id = $id.val().trim();
+                    var name = $name.val().trim();
+                    var cname = $cname.val().trim();
+                    var radioValue = $("input[name='optradio']:checked").val();
+                    // I tried making it like your video but the popup doesn't work if the id is 
+                    // entered but, if you fill in all the details, it will add it to database and
+                    //  will show a popup for success as "Registeration Info Saved"
+                    if (id.length < 1) {
+                        showPopupId("Invitation ID cannot be empty");
+                    }
+                    if (name.length < 1) {
+                        showPopupName("Your Name can not be empty");
+                    }
+                    if (cname.length < 1) {
+                        showPopupCompany("Company Name can not be empty");
+                    }
+
+                    if (cname.length > 1 && name.length > 1 && id.length > 1) {
+                        var employee = {invitationID: id, name: name, company: cname, type: radioValue};
+                        var transaction = db.transaction(["registration"], "readwrite");
+                        var storeRequest = transaction.objectStore("registration").put(employee);
+                        //  var objectStoreRequest = storeRequest.add({invitationID: id, name: name, company: cname, type: radioValue});
+                        storeRequest.onsuccess = function () {
+                            showPopupId("Registration Info Saved");
+                        };
+                        return;
+                    }
+                });
+
+                $btnDelete.click(function () {
+                    db.transaction(["registration"], "readwrite").objectStore("registration").delete($id.val().trim());
+                    $id.val("");
+                    $name.val("");
+                    $cname.val("");
+                    $("#rbSoleProprietorship").prop("checked", true);
+                    showPopupId("Invitation was successfully deleted!");
+                });
+
+                $btnCheck.click(function () {
+                    var id = $id.val().trim();
+                    if (id.length != 0) {
+                        var store = db.transaction("registration").objectStore("registration");
+                        store.openCursor().onsuccess = function (event1) {
+                            var cursor = event1.target.result;
+                            if (cursor) {
+                                if (cursor.value.invitationID == $id.val().trim()) {
+                                    $name.val(cursor.value.name);
+                                    $cname.val(cursor.value.company);
+                                    switch (cursor.value.type) {
+                                        case "Sole proprietorship":
+                                            $("#rbSoleProprietorship").prop("checked", true);
+                                            break;
+                                        case "Partnership":
+                                            $("#rbPartnership").prop("checked", true);
+                                            break;
+                                        case "Corporation":
+                                            $("#rbCorporation").prop("checked", true);
+                                            break;
+                                        case "Other":
+                                            $("#rbOther").prop("checked", true);
+                                            break;
+                                    }
+                                    showPopupId("Invitation was successfully retrieved!");
+                                    return;
+                                }
+                                cursor.continue();
+                            } else {
+                                showPopupId("Invitation ID not found");
+                            }
+                        };
+                    } else {
+                        showPopupId("Invitation ID cannot be empty");
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
